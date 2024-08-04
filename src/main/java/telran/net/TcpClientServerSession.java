@@ -3,26 +3,29 @@ package telran.net;
 import java.net.*;
 import java.io.*;
 import static telran.net.TcpConfigurationProperties.*;
-public class TcpClientServerSession extends Thread{
+
+public class TcpClientServerSession extends Thread {
 	Socket socket;
 	Protocol protocol;
 	TcpServer tcpServer;
+
 	public TcpClientServerSession(Socket socket, Protocol protocol, TcpServer tcpServer) {
 		this.socket = socket;
 		this.tcpServer = tcpServer;
-		//using the method setSoTimeout and some solution for getting session to know about shutdown
-		//you should stop the thread after shutdown command
+		// using the method setSoTimeout and some solution for getting session to know
+		// about shutdown
+		// you should stop the thread after shutdown command
 		this.protocol = protocol;
 	}
+
 	public void run() {
-		try (BufferedReader receiver =
-				new BufferedReader(new InputStreamReader(socket.getInputStream()));
-				PrintStream sender = new PrintStream(socket.getOutputStream())){
+		try (BufferedReader receiver = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+				PrintStream sender = new PrintStream(socket.getOutputStream())) {
 			String line = null;
 			boolean sessionRunning = true;
 			socket.setSoTimeout(SOCKET_TIMEOUT);
 			long idleTime = 0;
-			while(tcpServer.running && sessionRunning) {
+			while (tcpServer.running && sessionRunning) {
 				try {
 					line = receiver.readLine();
 					if (line == null) {
@@ -39,9 +42,13 @@ public class TcpClientServerSession extends Thread{
 				}
 			}
 			socket.close();
-			
+			System.out.printf("Session %s was gracefull shut down.\n", 
+					Thread.currentThread().getName());
+
 		} catch (Exception e) {
-			System.out.println(e);
+			System.out.printf("Session %s was shut down with error: %s.\n", 
+					Thread.currentThread().getName(),
+					e.getMessage());
 		}
 	}
 
